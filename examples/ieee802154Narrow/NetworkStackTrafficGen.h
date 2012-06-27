@@ -49,6 +49,7 @@ protected:
 
 	int packetLength;
 	simtime_t packetTime;
+	simtime_t intertxtime;
 	double pppt;
 	int burstSize;
 	int remainingBurst;

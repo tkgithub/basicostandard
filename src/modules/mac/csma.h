@@ -75,7 +75,7 @@ class MIXIM_API csma : public BaseMacLayer
 		, status(STATUS_OK)
 		, sifs()
 		, macAckWaitDuration()
-		, transmissionAttemptInterruptedByRx(false)
+		, transmissionAttemptInterruptedByRx(false) //modified JJR false
 		, ccaDetectionTime()
 		, rxSetupTime()
 		, aTurnaroundTime()

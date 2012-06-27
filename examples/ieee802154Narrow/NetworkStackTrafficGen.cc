@@ -35,6 +35,7 @@ void NetworkStackTrafficGen::initialize(int stage)
 		arp          = FindModule<BaseArp*>::findSubModule(findHost());
 		myNetwAddr   = arp->myNetwAddr(this);
 
+		intertxtime = par("intertxtime");
 		packetLength = par("packetLength");
 		packetTime   = par("packetTime");
 		pppt         = par("packetsPerPacketTime");
@@ -45,7 +46,9 @@ void NetworkStackTrafficGen::initialize(int stage)
 	} else if (stage == 1) {
 		if(burstSize > 0) {
 			remainingBurst = burstSize;
-			scheduleAt(dblrand() * packetTime * burstSize / pppt, delayTimer);
+			//scheduleAt(dblrand() * packetTime * burstSize / pppt, delayTimer);
+			EV << "First delay !"<< intertxtime <<endl;
+			scheduleAt(dblrand() * intertxtime, delayTimer);
 		}
 	} else {
 
@@ -64,6 +67,8 @@ void NetworkStackTrafficGen::finish()
 
 void NetworkStackTrafficGen::handleSelfMsg(cMessage *msg)
 {
+	simtime_t generateddelay;
+	generateddelay=(dblrand() * intertxtime);
 	switch( msg->getKind() )
 	{
 	case SEND_BROADCAST_TIMER:
@@ -76,9 +81,11 @@ void NetworkStackTrafficGen::handleSelfMsg(cMessage *msg)
 
 		if(remainingBurst == 0) {
 			remainingBurst = burstSize;
-			scheduleAt(simTime() + (dblrand()*1.4+0.3)*packetTime * burstSize / pppt, msg);
+
+			EV << "Generated delay" << generateddelay <<endl;
+			scheduleAt(simTime() + generateddelay , msg);
 		} else {
-			scheduleAt(simTime() + packetTime * 2, msg);
+		    scheduleAt(simTime() + generateddelay , msg);
 		}
 
 		break;

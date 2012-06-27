@@ -25,6 +25,7 @@ simple NetworkStackTrafficGen extends BaseNetwLayer
     parameters:
         @class(NetworkStackTrafficGen);
         double packetTime @unit(s);
+        double intertxtime @unit(s);
         double packetsPerPacketTime;
         bool debug = default(false); // debug switch
         int burstSize = default(1);

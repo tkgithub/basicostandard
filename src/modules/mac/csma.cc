@@ -257,7 +257,7 @@ void csma::updateStatusIdle(t_mac_event event, cMessage *msg) {
 		break;
 
 	case EV_BROADCAST_RECEIVED:
-		debugEV << "(23) FSM State IDLE_1, EV_BROADCAST_RECEIVED: Nothing to do." << endl;
+		EV << "(23) FSM State IDLE_1, EV_BROADCAST_RECEIVED: Nothing to do." << endl;
 		nbRxFrames++;
 		sendUp(decapsMsg(static_cast<MacPkt *>(msg)));
 		delete msg;
@@ -281,7 +281,7 @@ void csma::updateStatusBackoff(t_mac_event event, cMessage *msg) {
 		// suspend current transmission attempt,
 		// transmit ack,
 		// and resume transmission when entering manageQueue()
-		debugEV << "(28) FSM State BACKOFF, EV_DUPLICATE_RECEIVED:";
+		EV << "(28) FSM State BACKOFF, EV_DUPLICATE_RECEIVED:";
 		if(useMACAcks) {
 			debugEV << "suspending current transmit tentative and transmitting ack";
 			transmissionAttemptInterruptedByRx = true;
@@ -302,7 +302,7 @@ void csma::updateStatusBackoff(t_mac_event event, cMessage *msg) {
 		// and resume transmission when entering manageQueue()
 		debugEV << "(28) FSM State BACKOFF, EV_FRAME_RECEIVED:";
 		if(useMACAcks) {
-			debugEV << "suspending current transmit tentative and transmitting ack";
+			EV << "suspending current transmit tentative and transmitting ack";
 			transmissionAttemptInterruptedByRx = true;
 			cancelEvent(backoffTimer);
 
@@ -310,13 +310,13 @@ void csma::updateStatusBackoff(t_mac_event event, cMessage *msg) {
 			updateMacState(WAITSIFS_6);
 			startTimer(TIMER_SIFS);
 		} else {
-			debugEV << "sending frame up and resuming normal operation.";
+			EV << "sending frame up and resuming normal operation.";
 		}
-		sendUp(decapsMsg(static_cast<MacPkt *>(msg)));
+	//sendUp(decapsMsg(static_cast<MacPkt *>(msg)));
 		delete msg;
 		break;
 	case EV_BROADCAST_RECEIVED:
-		debugEV << "(29) FSM State BACKOFF, EV_BROADCAST_RECEIVED:"
+		EV << "(29) FSM State BACKOFF, EV_BROADCAST_RECEIVED:"
 		<< "sending frame up and resuming normal operation." <<endl;
 		sendUp(decapsMsg(static_cast<MacPkt *>(msg)));
 		delete msg;
@@ -588,8 +588,11 @@ void csma::updateStatusNotIdle(cMessage *msg) {
  */
 void csma::executeMac(t_mac_event event, cMessage *msg) {
 	debugEV<< "In executeMac" << endl;
-	if(macState != IDLE_1 && event == EV_SEND_REQUEST) {
-		updateStatusNotIdle(msg);
+
+	 if(macState != IDLE_1 && event == EV_SEND_REQUEST) {
+	 // JJR
+	//if((macState != IDLE_1) && (event == EV_SEND_REQUEST || event==EV_TIMER_CCA || event==EV_FRAME_RECEIVED)) {
+	   updateStatusNotIdle(msg);
 	} else {
 		switch(macState) {
 		case IDLE_1:
@@ -626,7 +629,9 @@ void csma::manageQueue() {
 		if( transmissionAttemptInterruptedByRx) {
 			// resume a transmission cycle which was interrupted by
 			// a frame reception during CCA check
-			transmissionAttemptInterruptedByRx = false;
+
+
+		    transmissionAttemptInterruptedByRx = false;
 		} else {
 			// initialize counters if we start a new transmission
 			// cycle from zero
@@ -658,12 +663,14 @@ void csma::fsmError(t_mac_event event, cMessage *msg) {
 
 void csma::startTimer(t_mac_timer timer) {
 	if (timer == TIMER_BACKOFF) {
+	    phy->setRadioState(Radio::SLEEP); //MOD
 		scheduleAt(scheduleBackoff(), backoffTimer);
 	} else if (timer == TIMER_CCA) {
 		simtime_t ccaTime = rxSetupTime + ccaDetectionTime;
 		debugEV<< "(startTimer) ccaTimer value=" << ccaTime
 		<< "(rxSetupTime,ccaDetectionTime:" << rxSetupTime
 		<< "," << ccaDetectionTime <<")." << endl;
+		phy->setRadioState(Radio::RX); //MOD
 		scheduleAt(simTime()+rxSetupTime+ccaDetectionTime, ccaTimer);
 	} else if (timer==TIMER_SIFS) {
 		assert(useMACAcks);
