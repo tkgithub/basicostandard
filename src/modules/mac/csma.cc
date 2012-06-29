@@ -634,10 +634,13 @@ void csma::manageQueue() {
             NB = 0;
             //BE = macMinBE;
         }
-        if(! backoffTimer->isScheduled()) {
-          startTimer(TIMER_BACKOFF);
+
+        if(phy->getRadioState() == Radio::RX) { //MOD JJR
+          if(! backoffTimer->isScheduled()) {
+            startTimer(TIMER_BACKOFF);
+          }
+          updateMacState(BACKOFF_2);
         }
-        updateMacState(BACKOFF_2);
     } else {
         debugEV << "(manageQueue) no packets to send, entering IDLE state." << endl;
         updateMacState(IDLE_1);
