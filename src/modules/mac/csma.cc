@@ -263,6 +263,7 @@ void csma::updateStatusIdle(t_mac_event event, cMessage *msg) {
         delete msg;
         break;
     default:
+        EV<< "updatestatusIDle" << endl; //MODJJR
         fsmError(event, msg);
         break;
     }
@@ -322,6 +323,7 @@ void csma::updateStatusBackoff(t_mac_event event, cMessage *msg) {
         delete msg;
         break;
     default:
+        EV<< "updatestatusbackoff" << endl; //MODJJR
         fsmError(event, msg);
         break;
     }
@@ -421,6 +423,7 @@ void csma::updateStatusCCA(t_mac_event event, cMessage *msg) {
         delete msg;
         break;
     default:
+        EV<< "updatestatusCCA" << endl; //MODJJR
         fsmError(event, msg);
         break;
     }
@@ -455,6 +458,7 @@ void csma::updateStatusTransmitFrame(t_mac_event event, cMessage *msg) {
             manageQueue();
         }
     } else {
+        EV<< "updatestatustransmitframe" << endl; //MODJJR
         fsmError(event, msg);
     }
 }
@@ -492,6 +496,7 @@ void csma::updateStatusWaitAck(t_mac_event event, cMessage *msg) {
         delete msg;
         break;
     default:
+        EV<< "updatestatuswaitack" << endl; //MODJJR
         fsmError(event, msg);
         break;
     }
@@ -545,6 +550,7 @@ void csma::updateStatusSIFS(t_mac_event event, cMessage *msg) {
         delete msg;
         break;
     default:
+        EV<< "updatestatusSIFS" << endl; //MODJJR
         fsmError(event, msg);
         break;
     }
@@ -560,6 +566,7 @@ void csma::updateStatusTransmitAck(t_mac_event event, cMessage *msg) {
         //      delete msg;
         manageQueue();
     } else {
+        EV<< "updatestatustransmitack" << endl; //MODJJR
         fsmError(event, msg);
     }
 }
@@ -596,7 +603,7 @@ void csma::executeMac(t_mac_event event, cMessage *msg) {
             updateStatusIdle(event, msg);
             break;
         case BACKOFF_2:
-            //phy->setRadioState(Radio::RX); //MOD JJR
+            phy->setRadioState(Radio::RX); //MOD JJR
             updateStatusBackoff(event, msg);
             break;
         case CCA_3:
@@ -623,7 +630,7 @@ void csma::executeMac(t_mac_event event, cMessage *msg) {
 
 void csma::manageQueue() {
     if (macQueue.size() != 0) {
-        debugEV<< "(manageQueue) there are " << macQueue.size() << " packets to send, entering backoff wait state." << endl;
+        EV<< "(manageQueue) there are " << macQueue.size() << " packets to send, entering backoff wait state." << endl;
         if( transmissionAttemptInterruptedByRx) {
             // resume a transmission cycle which was interrupted by
             // a frame reception during CCA check
@@ -635,12 +642,20 @@ void csma::manageQueue() {
             //BE = macMinBE;
         }
 
-        if(phy->getRadioState() == Radio::RX) { //MOD JJR
-          if(! backoffTimer->isScheduled()) {
-            startTimer(TIMER_BACKOFF);
+
+          if(! backoffTimer->isScheduled() ) {
+              EV << "backoff scheduled" << endl;
+
+              if(phy->getRadioState() == Radio::RX ) {
+              //MOD JJR && phy->getRadioState() == Radio::RX
+                  EV << "Radio en switch" << endl;
+                startTimer(TIMER_BACKOFF);
+                updateMacState(BACKOFF_2);
+              }
+          } else {
+              EV << "Problema_backoff" << endl;
           }
-          updateMacState(BACKOFF_2);
-        }
+
     } else {
         debugEV << "(manageQueue) no packets to send, entering IDLE state." << endl;
         updateMacState(IDLE_1);
